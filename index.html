@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ViVeTool ID Converter</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0E1116;
+    --surface: #161B22;
+    --surface-hover: #1C2129;
+    --border: #2A3140;
+    --border-focus: #4A7CFF;
+    --text: #E6EDF3;
+    --text-dim: #7D8590;
+    --accent: #4A7CFF;
+    --accent-glow: rgba(74, 124, 255, 0.15);
+    --green: #3FB950;
+    --green-glow: rgba(63, 185, 80, 0.12);
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem 1.25rem;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 520px;
+  }
+
+  header {
+    margin-bottom: 2.5rem;
+  }
+
+  header h1 {
+    font-family: var(--mono);
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.4rem;
+  }
+
+  header h1 span {
+    color: var(--accent);
+  }
+
+  header p {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .direction-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 1.25rem;
+  }
+
+  .direction-toggle button {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .direction-toggle button.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(74, 124, 255, 0.3);
+  }
+
+  .direction-toggle button:not(.active):hover {
+    color: var(--text);
+    background: var(--surface-hover);
+  }
+
+  .field {
+    margin-bottom: 1rem;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.4rem;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .field input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .field input:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .field input::placeholder {
+    color: var(--text-dim);
+    opacity: 0.5;
+  }
+
+  button.convert-btn {
+    padding: 0.75rem 1.25rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+
+  button.convert-btn:hover { opacity: 0.88; }
+
+  .result-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-top: 0.25rem;
+    display: none;
+  }
+
+  .result-box.visible { display: block; }
+
+  .result-box.error {
+    border-color: #f85149;
+  }
+
+  .result-box.error .result-value {
+    color: #f85149;
+  }
+
+  .result-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.35rem;
+  }
+
+  .result-values {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .result-value {
+    font-family: var(--mono);
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--green);
+    word-break: break-all;
+  }
+
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    font-family: var(--sans);
+    font-weight: 500;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .copy-btn:hover {
+    color: var(--text);
+    border-color: var(--text-dim);
+  }
+
+  .copy-btn.copied {
+    color: var(--green);
+    border-color: var(--green);
+  }
+
+  .info {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .info h2 {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+  }
+
+  .info pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    line-height: 1.65;
+    color: var(--text-dim);
+    overflow-x: auto;
+  }
+
+  .ref-link {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-decoration: none;
+    word-break: break-all;
+  }
+
+  .ref-link:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 2rem 1rem; }
+    .input-row { flex-direction: column; }
+    button.convert-btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1><span>&gt;</span> ViVeTool ID Converter</h1>
+    <p>Convert between raw and obfuscated Windows Feature Configuration IDs used by ViVeTool / Albacore.ViVe.</p>
+  </header>
+
+  <div class="direction-toggle">
+    <button class="active" id="btn-obf" onclick="setMode('obfuscate')">Obfuscate</button>
+    <button id="btn-deobf" onclick="setMode('deobfuscate')">Deobfuscate</button>
+  </div>
+
+  <div class="field">
+    <label id="input-label">Feature ID (decimal or hex)</label>
+    <div class="input-row">
+      <input type="text" id="input" placeholder="e.g. 42000000 or 0x280DE80" autofocus
+             onkeydown="if(event.key==='Enter')convert()">
+      <button class="convert-btn" onclick="convert()">Convert</button>
+    </div>
+  </div>
+
+  <div class="result-box" id="result">
+    <div class="result-label" id="result-label">Result</div>
+    <div class="result-values">
+      <span class="result-value" id="result-value"></span>
+      <button class="copy-btn" id="copy-btn" onclick="copyResult()">Copy</button>
+    </div>
+  </div>
+
+  <div class="info">
+    <h2>How it works</h2>
+    <pre>Obfuscate(id):
+  x = id XOR 0x74161A4E
+  x = SwapBytes(x)
+  x = x XOR 0x8FB23D4F
+  x = RotateLeft32(x, 1)
+  x = x XOR 0x833EA8FF
+  return x
+
+Deobfuscate(id):
+  x = id XOR 0x833EA8FF
+  x = RotateRight32(x, 1)
+  x = x XOR 0x8FB23D4F
+  x = SwapBytes(x)
+  x = x XOR 0x74161A4E
+  return x
+
+SwapBytes reverses byte order (big ↔ little endian).</pre>
+    <a class="ref-link" href="https://github.com/thebookisclosed/ViVe/blob/master/ViVe/ObfuscationHelpers.cs" target="_blank" rel="noopener">Source: https://github.com/thebookisclosed/ViVe/blob/master/ViVe/ObfuscationHelpers.cs</a>
+  </div>
+</div>
+
+<script>
+  let mode = 'obfuscate';
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('btn-obf').classList.toggle('active', m === 'obfuscate');
+    document.getElementById('btn-deobf').classList.toggle('active', m === 'deobfuscate');
+    document.getElementById('input-label').textContent =
+      m === 'obfuscate' ? 'Feature ID (decimal or hex)' : 'Obfuscated ID (decimal or hex)';
+    document.getElementById('input').placeholder =
+      m === 'obfuscate' ? 'e.g. 42000000 or 0x280DE80' : 'e.g. 3523498137 or 0xD2076A99';
+    document.getElementById('result').classList.remove('visible');
+  }
+
+  function parseInput(str) {
+    str = str.trim();
+    if (!str) return null;
+    // Handle signed negative (interpret as uint32)
+    if (/^-\d+$/.test(str)) {
+      const n = BigInt(str);
+      const u = ((n % 0x100000000n) + 0x100000000n) % 0x100000000n;
+      return Number(u);
+    }
+    if (/^0x[0-9a-fA-F]+$/i.test(str)) {
+      const v = parseInt(str, 16);
+      return (v >>> 0) <= 0xFFFFFFFF ? v >>> 0 : null;
+    }
+    if (/^\d+$/.test(str)) {
+      const v = Number(str);
+      return v <= 0xFFFFFFFF ? v >>> 0 : null;
+    }
+    return null;
+  }
+
+  function swapBytes(x) {
+    x = ((x >>> 16) | (x << 16)) >>> 0;
+    return (((x & 0xFF00FF00) >>> 8) | ((x & 0x00FF00FF) << 8)) >>> 0;
+  }
+
+  function rotateRight32(value, shift) {
+    shift = ((shift % 32) + 32) % 32;
+    return ((value >>> shift) | (value << (32 - shift))) >>> 0;
+  }
+
+  function obfuscate(id) {
+    // RotateRight32(..., -1) is equivalent to RotateLeft by 1
+    let x = (id ^ 0x74161A4E) >>> 0;
+    x = swapBytes(x);
+    x = (x ^ 0x8FB23D4F) >>> 0;
+    x = rotateRight32(x, -1); // rotate right by -1 = rotate left by 1
+    x = (x ^ 0x833EA8FF) >>> 0;
+    return x;
+  }
+
+  function deobfuscate(id) {
+    let x = (id ^ 0x833EA8FF) >>> 0;
+    x = rotateRight32(x, 1);
+    x = (x ^ 0x8FB23D4F) >>> 0;
+    x = swapBytes(x);
+    x = (x ^ 0x74161A4E) >>> 0;
+    return x;
+  }
+
+  function convert() {
+    const raw = document.getElementById('input').value;
+    const box = document.getElementById('result');
+    const valEl = document.getElementById('result-value');
+    const labelEl = document.getElementById('result-label');
+
+    const parsed = parseInput(raw);
+    if (parsed === null) {
+      box.classList.add('visible', 'error');
+      labelEl.textContent = 'Error';
+      valEl.textContent = 'Enter a valid decimal or 0x-prefixed hex value (0 – 4294967295)';
+      return;
+    }
+
+    box.classList.remove('error');
+    const result = mode === 'obfuscate' ? obfuscate(parsed) : deobfuscate(parsed);
+    labelEl.textContent = mode === 'obfuscate' ? 'Obfuscated ID' : 'Deobfuscated ID';
+    valEl.textContent = result + '  (0x' + result.toString(16).toUpperCase().padStart(8, '0') + ')';
+    box.classList.add('visible');
+
+    // reset copy button
+    const cb = document.getElementById('copy-btn');
+    cb.textContent = 'Copy';
+    cb.classList.remove('copied');
+  }
+
+  function copyResult() {
+    const valEl = document.getElementById('result-value');
+    const text = valEl.textContent.split('  ')[0]; // just the decimal
+    navigator.clipboard.writeText(text).then(() => {
+      const cb = document.getElementById('copy-btn');
+      cb.textContent = 'Copied';
+      cb.classList.add('copied');
+      setTimeout(() => { cb.textContent = 'Copy'; cb.classList.remove('copied'); }, 1500);
+    });
+  }
+</script>
+</body>
+</html>
